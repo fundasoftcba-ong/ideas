@@ -1,6 +1,6 @@
 # Sintaxis inicial de XEN
 
-> Borrador inicial. Esta sintaxis se irá ajustando al probar casos reales de negocio.
+> Borrador inicial. La sintaxis se ajustará al probar nuevos casos de negocio.
 
 ## Objetivo
 
@@ -8,23 +8,24 @@ Representar modelos y flujos de negocio de forma simple y legible, sin describir
 
 ## Organización
 
-- Cada archivo de flujo representa un flujo de negocio completo.
-- Los pasos del archivo se interpretan en el orden en que aparecen.
-- Los modelos viven en archivos JSON independientes y están disponibles globalmente para los flujos.
+- Cada archivo representa un flujo de negocio completo.
+- Las instrucciones del archivo se interpretan en el orden en que aparecen.
+- Cada modelo vive en su propio archivo JSON.
+- Los modelos están disponibles globalmente para todos los flujos.
 - Un flujo referencia los modelos, pero no vuelve a definirlos.
 
 ## Reglas generales
 
-- La sintaxis básica de variables, objetos, condiciones y ciclos sigue el estilo de JavaScript.
+- La sintaxis de variables, objetos, condiciones y ciclos sigue el estilo de JavaScript.
 - Los modelos se escriben en mayúsculas y en plural.
 - El lenguaje no incluye asincronismo, promesas, `async` ni `await`.
 - Las instrucciones representan reglas o acciones de negocio.
-- Los componentes y operaciones son obligatorios por defecto.
-- Una operación opcional debe indicarse expresamente con `.optional()`.
+- Las interacciones son obligatorias por defecto.
+- Una interacción opcional debe indicarse expresamente con `.optional()`.
 
 ## Modelos
 
-Cada modelo se guarda como un objeto plano en su propio archivo JSON:
+Un modelo se representa mediante un objeto plano:
 
 ```js
 PERSONAS = {
@@ -36,63 +37,75 @@ PERSONAS = {
 
 ## Relaciones
 
-El modelo relacionado siempre se escribe en plural. El nombre de la propiedad determina la cantidad:
+El modelo relacionado se escribe en plural. El nombre de la propiedad determina la cantidad:
 
 ```js
 VENTAS = {
-  cliente: CLIENTES, // una relación
-  libros: LIBROS     // varias relaciones
+  cliente: CLIENTES,
+  libros: LIBROS
 }
 ```
 
-- Propiedad singular: un elemento.
-- Propiedad plural: varios elementos.
+- Propiedad singular: relación con un elemento.
+- Propiedad plural: relación con varios elementos.
 
 ## Kit básico
 
-El kit inicial contiene interacciones generales que no pertenecen a un modelo:
+Las interacciones generales no pertenecen a ningún modelo:
 
 ```js
-modal(PERSONAS)
-drawer(PERSONAS)
-select(PERSONAS)
-confirm("¿Desea continuar?")
+modal(MODELO)
+drawer(MODELO)
+select(MODELO)
+confirm("Pregunta")
 ```
 
-### Confirmación humana
+### `select`
 
-`confirm` representa una decisión obligatoria de sí o no y devuelve `true` o `false`:
+Selecciona uno o varios elementos de un modelo.
+
+La selección es obligatoria por defecto. Si se cancela, el flujo no continúa:
 
 ```js
-reservar = confirm("¿Desea reservar los libros sin stock?")
-
-if (reservar) {
-  RESERVAS.create(cliente, libros)
-}
+elemento = select(MODELO)
 ```
 
-## Propiedades encadenadas
-
-Los componentes pueden configurarse encadenando propiedades:
+Puede configurarse mediante propiedades encadenadas:
 
 ```js
-personas = select(PERSONAS)
+elementos = select(MODELO)
   .min(2)
   .max(5)
 ```
 
-## Selección obligatoria y opcional
-
-`select` exige una selección por defecto. Si se cancela, el flujo no continúa.
+Cuando la ausencia de selección forma parte del flujo:
 
 ```js
-persona = select(PERSONAS)
+elemento = select(MODELO).optional()
 ```
 
-Cuando no encontrar o no elegir un elemento forma parte del negocio:
+### `confirm`
+
+Representa una decisión humana obligatoria de sí o no y devuelve `true` o `false`:
 
 ```js
-persona = select(PERSONAS).optional()
+respuesta = confirm("¿Desea continuar?")
+```
+
+### `modal`
+
+Muestra un elemento o resultado relacionado con un modelo:
+
+```js
+modal(MODELO)
+```
+
+### `drawer`
+
+Muestra un elemento o resultado relacionado con un modelo dentro de un panel lateral:
+
+```js
+drawer(MODELO)
 ```
 
 ## CRUD
@@ -100,31 +113,53 @@ persona = select(PERSONAS).optional()
 Todos los modelos disponen de las operaciones básicas:
 
 ```js
-PERSONAS.create(...)
-PERSONAS.read(...)
-PERSONAS.update(...)
-PERSONAS.delete(...)
+MODELO.create(...)
+MODELO.read(...)
+MODELO.update(...)
+MODELO.delete(...)
 ```
 
-Los parámetros se pasan directamente, evitando objetos innecesarios:
+Los parámetros se pasan directamente y sin estructuras adicionales innecesarias:
 
 ```js
-VENTAS.create(cliente, libro)
+MODELO.create(parametro1, parametro2)
 ```
 
-## Lógica
+## Variables
 
-Se utilizan las condiciones y ciclos habituales de JavaScript:
+Las variables siguen el estilo de JavaScript:
+
+```js
+variable = valor
+```
+
+## Condiciones
+
+Las condiciones siguen el estilo de JavaScript:
 
 ```js
 if (condicion) {
 
 }
 
+else {
+
+}
+```
+
+## Ciclos
+
+Los ciclos siguen el estilo de JavaScript:
+
+```js
 while (condicion) {
 
 }
+```
 
+## Selección múltiple de caminos
+
+```js
 switch (valor) {
   case opcion:
     break
@@ -136,72 +171,28 @@ switch (valor) {
 
 ## Métodos de negocio
 
-Los modelos pueden incorporar métodos propios. La forma definitiva de declarar su descripción y sus parámetros todavía debe definirse.
-
-Ejemplos de uso:
+Los modelos pueden incorporar métodos propios para representar reglas de negocio:
 
 ```js
-persona = PERSONAS.mayor(edad)
-hay_stock = LIBROS.stock_suficiente(libros)
+resultado = MODELO.metodo(parametros)
 ```
 
-## Ejemplo: venta parcial con reserva opcional
+La sintaxis definitiva para declarar la descripción, los parámetros y el resultado de estos métodos todavía debe definirse.
 
-Archivo de flujo `venta_libros.xen`:
+## Comentarios
+
+Los comentarios utilizan doble barra:
 
 ```js
-cliente = select(CLIENTES).optional()
-
-if (!cliente) {
-  cliente = CLIENTES.create()
-}
-
-libros = select(LIBROS)
-  .min(1)
-  .max(3)
-
-if (LIBROS.stock_suficiente(libros)) {
-  venta = VENTAS.create(cliente, libros)
-  comprobante = COMPROBANTES.create(venta)
-}
-
-else {
-  disponibles = LIBROS.disponibles(libros)
-  faltantes = LIBROS.faltantes(libros)
-
-  reservar = confirm("¿Desea reservar los libros sin stock?")
-
-  venta = VENTAS.create(cliente, disponibles)
-
-  if (reservar) {
-    reserva = RESERVAS.create(cliente, faltantes)
-    comprobante = COMPROBANTES.create(venta, reserva)
-  }
-
-  else {
-    comprobante = COMPROBANTES.create(venta)
-  }
-}
-
-modal(COMPROBANTES)
+// Descripción o aclaración
 ```
-
-Este flujo representa:
-
-1. Buscar o crear el cliente.
-2. Seleccionar los libros.
-3. Comprobar el stock.
-4. Vender todos los libros cuando hay stock suficiente.
-5. Cuando falta stock, vender los disponibles.
-6. Preguntar al cliente si desea reservar los faltantes.
-7. Crear la reserva solamente si el cliente la confirma.
-8. Generar un comprobante y mostrarlo.
 
 ## Puntos pendientes
 
-- Sintaxis para declarar y describir métodos de negocio.
+- Declaración y descripción de métodos de negocio.
+- Parámetros y resultados de los métodos.
 - Validaciones de campos.
-- Cálculos, descuentos y totales.
+- Cálculos y valores derivados.
 - Estados y transiciones.
 - Manejo de errores de negocio.
-- Operaciones que modifican varios modelos, como confirmar una venta y descontar stock.
+- Operaciones que modifican varios modelos.
