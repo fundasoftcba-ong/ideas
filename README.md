@@ -1,6 +1,8 @@
 # Ideas
 
-Repositorio para guardar ideas que surjan durante las conversaciones y que Juan Carlos pida documentar expresamente.
+Repositorio dedicado exclusivamente a guardar ideas. No se utiliza para código, pruebas, componentes ni documentación general de otros proyectos.
+
+Las ideas pueden surgir durante una conversación, pero solo se registran cuando Juan Carlos pide documentarlas expresamente.
 
 ## Estructura
 
