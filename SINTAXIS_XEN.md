@@ -60,6 +60,24 @@ select(MODELO)
 confirm("Pregunta")
 ```
 
+### `input`
+
+Solicita al usuario el valor de un campo definido en un modelo:
+
+```js
+valor = input(MODELO.campo)
+```
+
+El campo permite identificar qué dato debe solicitarse y aplicar su tipo y sus reglas sin repetir esa información en el flujo.
+
+### `alert`
+
+Muestra un mensaje informativo al usuario y no solicita una respuesta:
+
+```js
+alert("Mensaje")
+```
+
 ### `select`
 
 Selecciona uno o varios elementos de un modelo.
