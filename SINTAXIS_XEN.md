@@ -13,6 +13,7 @@ Representar modelos y flujos de negocio de forma simple y legible, sin describir
 - Cada modelo vive en su propio archivo JSON.
 - Los modelos están disponibles globalmente para todos los flujos.
 - Un flujo referencia los modelos, pero no vuelve a definirlos.
+- Antes de describir un flujo deben estar definidos los modelos y campos que utiliza.
 
 ## Reglas generales
 
@@ -22,6 +23,8 @@ Representar modelos y flujos de negocio de forma simple y legible, sin describir
 - Las instrucciones representan reglas o acciones de negocio.
 - Las interacciones son obligatorias por defecto.
 - Una interacción opcional debe indicarse expresamente con `.optional()`.
+- Los caminos alternativos se expresan mediante `if / else`; no existe una instrucción `stop`.
+- Una acción como anular no constituye necesariamente un método especial: si consiste en cambiar datos, se expresa mediante `.update()`.
 
 ## Modelos
 
@@ -126,21 +129,53 @@ Muestra un elemento o resultado relacionado con un modelo dentro de un panel lat
 drawer(MODELO)
 ```
 
-## CRUD
+## Operaciones sobre modelos
 
-Todos los modelos disponen de las operaciones básicas:
+Los modelos disponen de operaciones generales:
 
 ```js
 MODELO.create(...)
-MODELO.read(...)
+MODELO.one(...)
 MODELO.update(...)
 MODELO.delete(...)
 ```
 
-Los parámetros se pasan directamente y sin estructuras adicionales innecesarias:
+### `.one()`
+
+Obtiene un único registro:
+
+```js
+numero = input(COMPROBANTES.numero)
+comprobante = COMPROBANTES.one(numero)
+```
+
+Cuando no encuentra un registro, el flujo decide qué hacer mediante `if / else`.
+
+### `.create()`
+
+Crea un registro. Los parámetros se pasan directamente y sin estructuras adicionales innecesarias:
 
 ```js
 MODELO.create(parametro1, parametro2)
+```
+
+### `.update()`
+
+Actualiza un registro existente:
+
+```js
+comprobante.estado = "anulado"
+COMPROBANTES.update(comprobante)
+```
+
+Cambiar un estado, como anular un comprobante, es una actualización y no requiere un método `.anular()`.
+
+### `.delete()`
+
+Elimina un registro:
+
+```js
+MODELO.delete(registro)
 ```
 
 ## Variables
@@ -158,12 +193,12 @@ Las condiciones siguen el estilo de JavaScript:
 ```js
 if (condicion) {
 
-}
-
-else {
+} else {
 
 }
 ```
+
+Los caminos del flujo se resuelven con condiciones. No se agrega una instrucción especial para detenerlo.
 
 ## Ciclos
 
@@ -189,11 +224,13 @@ switch (valor) {
 
 ## Métodos de negocio
 
-Los modelos pueden incorporar métodos propios para representar reglas de negocio:
+Los modelos pueden incorporar métodos propios para representar reglas de negocio que no sean una operación general de creación, consulta, actualización o eliminación:
 
 ```js
 resultado = MODELO.metodo(parametros)
 ```
+
+No se crea un método de negocio cuando la acción puede expresarse directamente mediante una operación general como `.update()`.
 
 La sintaxis definitiva para declarar la descripción, los parámetros y el resultado de estos métodos todavía debe definirse.
 
@@ -204,6 +241,34 @@ Los comentarios utilizan doble barra:
 ```js
 // Descripción o aclaración
 ```
+
+## Ejemplo validado: anular un comprobante
+
+El modelo `COMPROBANTES` debe contener al menos los campos `numero` y `estado`.
+
+```js
+numero = input(COMPROBANTES.numero)
+comprobante = COMPROBANTES.one(numero)
+
+if (comprobante) {
+  comprobante.estado = "anulado"
+  COMPROBANTES.update(comprobante)
+  alert("Comprobante anulado")
+} else {
+  alert("No se encontró el comprobante")
+}
+```
+
+## Uso en documentos funcionales
+
+Un flujo XEN puede formar parte de un documento funcional junto con:
+
+- el objetivo del proceso;
+- los modelos involucrados;
+- las reglas de negocio;
+- el flujo principal;
+- los caminos alternativos;
+- el resultado esperado.
 
 ## Puntos pendientes
 
